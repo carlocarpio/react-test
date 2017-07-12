@@ -15,7 +15,6 @@
     "eject": "react-scripts eject"
   },
   "devDependencies": {
-    "bulma": "^0.4.3",
-    "moment": "^2.18.1"
+    "bulma": "^0.4.3"
   }
 }
