@@ -3,29 +3,31 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 
 const Table = props => {
-  const { rawdata } = props
+  const { rawdata, removeTask } = props
   return (
     <table className="table">
       <thead>
-          <tr>
+        <tr>
           <th>Task</th>
           <th>Description</th>
           <th>Priority</th>
-          </tr>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-          { rawdata && _.sortBy(rawdata[0].data.mossByte.object, [function(o) { return o.priority; }]).map((item, i) =>
-            <tr key={i + 1}>
-              <td>{item.title}</td>
-              <td>{item.description}</td>
-              <td>
-                {item.priority === 1 && <button className="button is-danger">TOP</button> }
-                {item.priority === 2 && <button className="button is-warning">LOW</button> }
-                {item.priority === 3 && <button className="button is-info">LOWER</button> }
-                {item.priority === 4 && <button className="button is-dark">LOWEST</button> }
-              </td>
-            </tr>
-          )} 
+        { rawdata && _.sortBy(rawdata[0].data.mossByte.object, [function(o) { return o.priority; }]).map((item, i) =>
+          <tr key={i} className={i === 0 ? 'isHidden' : ''}>
+            <td>{item.title}</td>
+            <td>{item.description}</td>
+            <td>
+              {item.priority === 1 && <button className="button is-danger">TOP</button> }
+              {item.priority === 2 && <button className="button is-warning">LOW</button> }
+              {item.priority === 3 && <button className="button is-info">LOWER</button> }
+              {item.priority === 4 && <button className="button is-dark">LOWEST</button> }
+            </td>
+            <td><button className="button is-danger" onClick={() => removeTask(item.id)}>remove</button></td>
+          </tr>
+        )} 
       </tbody>
     </table>
   )

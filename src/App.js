@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import _ from 'lodash';
+import moment from 'moment';
 import API from './utils/apiwrapper';
 import Field from './components/field';
 import Select from './components/select';
@@ -16,24 +18,35 @@ class App extends Component {
       },
       rawdata: '',
       task: {
+        id: moment().valueOf(),
         title: '',
         description: '',
-        priority: 2,
+        priority: 4,
       },
       tasks: [
         {
-          'title': 'Sample',
-          'description': 'Sample Description',
+          id: moment().valueOf(),
+          'title': '',
+          'description': '',
           'priority': 1,
         },
-      ]
+      ],
+      formValid: false,
     }
+  }
+
+  checkForm = () => {
+    const { task } = this.state;
+    const check = task.title !== '' && task.description !== '' ?
+      this.setState({ formValid: true }) :
+      this.setState({ formValid: false })
   }
 
   addTask = () => {
     const { rawdata, task }  = this.state
     const obj = rawdata[0].data.mossByte.object
     const taskItem = {
+      id: moment().valueOf(),
       title: task.title,
       description: task.description,
       priority: parseInt(task.priority)
@@ -105,12 +118,14 @@ class App extends Component {
     const task = this.state.task;
     task['title'] = e.target.value;
     this.setState({ task });
+    this.checkForm()
   }
 
   updateDescription = (e) => {
     const task = this.state.task;
     task['description'] = e.target.value;
     this.setState({ task });
+    this.checkForm()
   }
 
   updatePrio = (e) => {
@@ -126,9 +141,28 @@ class App extends Component {
       task: {
         title: '',
         description: '',
-        priority: '',
+        priority: '4',
       },
     })
+  }
+
+  removeTask = (id) => {
+    const { rawdata }  = this.state
+    const obj = rawdata[0].data.mossByte.object
+    const objReduced =  _.reject(obj, function(o) { return o.id === id; });
+    const updateTask = {
+      "object": objReduced
+    }
+    const { keys } = this.state;
+    Promise.all([
+      API.updateMossByte(updateTask, keys.admin),
+    ])
+    .then((data) => {
+      this.getMossByte()
+    })
+    .catch((err) => {
+      console.warn(err);
+    });
   }
 
   renderCreateKey = () => {
@@ -150,7 +184,7 @@ class App extends Component {
   }
 
   renderForm = () => {
-    const { task } = this.state
+    const { task, formValid } = this.state
     return (
       <form onSubmit={this.handleSubmit}>
         <Field
@@ -171,9 +205,9 @@ class App extends Component {
           type="number"
           value={parseInt(task.priority)}
         />
-        <div className="field is-grouped">
+        <div className="field is-grouped btn-form-group">
           <p className="control">
-            <button className="button is-primary">Submit</button>
+            <button className="button is-primary" disabled={!formValid}>Submit</button>
           </p>
           <p className="control">
             <a className="button is-danger" onClick={() => this.removeAllTask()}>Remove All Todos</a>
@@ -186,7 +220,7 @@ class App extends Component {
   renderTable = () => {
     const { rawdata } = this.state
     return (
-      <Table rawdata={rawdata} />
+      <Table rawdata={rawdata} removeTask={this.removeTask}/>
     )
   }
   

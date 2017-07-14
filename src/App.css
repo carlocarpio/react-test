@@ -6,6 +6,10 @@ form {
   margin: 20px 0 60px;
 }
 
+.btn-form-group {
+  justify-content: space-between !important;
+}
+
 .task-item {
   display: flex;
   flex-direction: row;
