@@ -37,7 +37,7 @@ class App extends Component {
 
   checkForm = () => {
     const { task } = this.state;
-    const check = task.title !== '' && task.description !== '' ?
+    task.title !== '' && task.description !== '' ?
       this.setState({ formValid: true }) :
       this.setState({ formValid: false })
   }
