@@ -268,26 +268,33 @@ class App extends Component {
       />
     )
   }
+
+  renderModal = () => {
+    const { isModalActive } = this.state
+    const modalClass = [ isModalActive ? 'modal is-active' : 'modal' ]
+    return (
+       <div id="modal-bis" className={modalClass}>
+        <div className="modal-background"></div>
+        <div className="modal-content">
+          { this.renderForm() }
+        </div>
+        <button
+          className="modal-close is-large"
+          onClick={() => this.closeModal()}
+        >
+        </button>
+      </div>
+    )
+  }
   
   render() {
     const { hasKey, isModalActive } = this.state
-    const modalClass = [ isModalActive ? 'modal is-active' : 'modal' ]
     return (
       <div className="App">
         <div className="columns">
           { hasKey ? this.renderMainContent() : this.renderCreateKey() }
         </div>
-        <div id="modal-bis" className={modalClass}>
-          <div className="modal-background"></div>
-          <div className="modal-content">
-            { this.renderForm() }
-          </div>
-          <button
-            className="modal-close is-large"
-            onClick={() => this.closeModal()}
-          >
-          </button>
-        </div>
+       { this.renderModal() }
       </div>
     );
   }
