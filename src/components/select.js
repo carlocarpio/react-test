@@ -10,6 +10,7 @@ const Select = props => {
       <p className="control">
         <span className="select">
           <select value={value} onChange={onChange}>
+            <option>------</option>
             <option value="4">lowest</option>
             <option value="3">lower</option>
             <option value="2">low</option>
@@ -24,7 +25,7 @@ const Select = props => {
 Select.propTypes = {
   onChange: PropTypes.func.isRequired,
   title: PropTypes.string.isRequired,
-  value: PropTypes.number.isRequired,
+  value: PropTypes.string.isRequired,
 }
 
-export default Select
+export default Select;

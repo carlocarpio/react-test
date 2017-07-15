@@ -11,6 +11,9 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
+      activeIndex: '',
+      activeTask: [],
+      formValid: false,
       hasKey: false,
       keys: {
         read: '',
@@ -21,41 +24,43 @@ class App extends Component {
         id: moment().valueOf(),
         title: '',
         description: '',
-        priority: 4,
+        priority: '4',
       },
       tasks: [
         {
-          id: moment().valueOf(),
+          'id': moment().valueOf(),
           'title': '',
           'description': '',
-          'priority': 1,
+          'priority': '1',
         },
       ],
-      formValid: false,
+      isEdit: false,
+      isModalActive: false,
     }
   }
 
   checkForm = () => {
     const { task } = this.state;
-    task.title !== '' && task.description !== '' ?
+    task.title !== ''&&
+    task.description !== '' &&
+    task.priority ?
       this.setState({ formValid: true }) :
       this.setState({ formValid: false })
   }
 
   addTask = () => {
-    const { rawdata, task }  = this.state
+    const { keys, rawdata, task }  = this.state
     const obj = rawdata[0].data.mossByte.object
     const taskItem = {
       id: moment().valueOf(),
       title: task.title,
       description: task.description,
-      priority: parseInt(task.priority)
+      priority: task.priority
     }
     obj.push(taskItem)
     const updateTask = {
-      "object": obj
+      "object": obj,
     }
-    const { keys } = this.state;
     Promise.all([
       API.updateMossByte(updateTask, keys.admin),
     ])
@@ -88,6 +93,28 @@ class App extends Component {
     });
   }
 
+  editTask = (item, i) => {
+    const { activeIndex, keys, rawdata, task }  = this.state
+    const obj = rawdata[0].data.mossByte.object
+    const data = {
+      "object": obj,
+      "rollback": false,
+      "instructions": [
+        {
+          "function": "set",
+          "key": activeIndex,
+          "value": { task }
+        }
+      ]
+    }
+    Promise.all([
+      API.editMossByte(data, keys.admin),
+    ])
+    .catch((err) => {
+      console.warn(err);
+    });
+  }
+
   getMossByte() {
     const { keys } = this.state;
     Promise.all([
@@ -114,6 +141,22 @@ class App extends Component {
     });
   }
 
+  removeTask = (id) => {
+    const { rawdata , keys}  = this.state
+    const obj = rawdata[0].data.mossByte.object
+    const objReduced =  _.reject(obj, function(o) { return o.id === id; });
+    const updateTask = { "object": objReduced }
+    Promise.all([
+      API.updateMossByte(updateTask, keys.admin),
+    ])
+    .then((data) => {
+      this.getMossByte()
+    })
+    .catch((err) => {
+      console.warn(err);
+    });
+  }
+
   updateTitle = (e) => {
     const task = this.state.task;
     task['title'] = e.target.value;
@@ -132,12 +175,16 @@ class App extends Component {
     const task = this.state.task;
     task['priority'] = e.target.value;
     this.setState({ task });
+    this.checkForm()
   }
 
   handleSubmit = (e) => {
+    const { isEdit } = this.state
     e.preventDefault()
-    this.addTask()
+    isEdit ? this.editTask() : this.addTask()
     this.setState({
+      isEdit: false,
+      isModalActive: false,
       task: {
         title: '',
         description: '',
@@ -146,30 +193,24 @@ class App extends Component {
     })
   }
 
-  removeTask = (id) => {
-    const { rawdata }  = this.state
-    const obj = rawdata[0].data.mossByte.object
-    const objReduced =  _.reject(obj, function(o) { return o.id === id; });
-    const updateTask = {
-      "object": objReduced
-    }
-    const { keys } = this.state;
-    Promise.all([
-      API.updateMossByte(updateTask, keys.admin),
-    ])
-    .then((data) => {
-      this.getMossByte()
+  openModal = (item, i) => {
+    this.setState({
+      activeIndex: i,
+      isEdit: !this.state.isEdit,
+      isModalActive: !this.state.isModalActive,
+      task: item,
     })
-    .catch((err) => {
-      console.warn(err);
-    });
+  }
+
+  closeModal = () => {
+    this.setState({isModalActive: false, isEdit: false})
   }
 
   renderCreateKey = () => {
     return (
       <div className="column is-half is-offset-one-quarter">
         <h2 className="title is-2">Get Key</h2>
-        <button className="button is-primary" onClick={() => this.createInitTask()}>Create Todo</button>
+        <button className="button is-primary" onClick={() => this.createInitTask()}>Create Todos</button>
       </div>
     )
   }
@@ -184,7 +225,7 @@ class App extends Component {
   }
 
   renderForm = () => {
-    const { task, formValid } = this.state
+    const { isEdit, task, formValid } = this.state
     return (
       <form onSubmit={this.handleSubmit}>
         <Field
@@ -202,14 +243,13 @@ class App extends Component {
         <Select
           title="Priority"
           onChange={this.updatePrio}
-          type="number"
-          value={parseInt(task.priority)}
+          value={task.priority}
         />
         <div className="field is-grouped btn-form-group">
           <p className="control">
             <button className="button is-primary" disabled={!formValid}>Submit</button>
           </p>
-          <p className="control">
+          <p className={`${isEdit && `is-hidden`}  control`}>
             <a className="button is-danger" onClick={() => this.removeAllTask()}>Remove All Todos</a>
           </p>
         </div>
@@ -220,16 +260,33 @@ class App extends Component {
   renderTable = () => {
     const { rawdata } = this.state
     return (
-      <Table rawdata={rawdata} removeTask={this.removeTask}/>
+      <Table
+        rawdata={rawdata}
+        editTask={this.editTask}
+        removeTask={this.removeTask}
+        openModal={this.openModal}
+      />
     )
   }
   
   render() {
-    const { hasKey } = this.state
+    const { hasKey, isModalActive } = this.state
+    const modalClass = [ isModalActive ? 'modal is-active' : 'modal' ]
     return (
       <div className="App">
         <div className="columns">
           { hasKey ? this.renderMainContent() : this.renderCreateKey() }
+        </div>
+        <div id="modal-bis" className={modalClass}>
+          <div className="modal-background"></div>
+          <div className="modal-content">
+            { this.renderForm() }
+          </div>
+          <button
+            className="modal-close is-large"
+            onClick={() => this.closeModal()}
+          >
+          </button>
         </div>
       </div>
     );

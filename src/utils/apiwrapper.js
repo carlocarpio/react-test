@@ -79,8 +79,28 @@ function updateMossByte(body = {}, key) {
   });
 }
 
+function editMossByte(body = {}, key) {
+  const url = `${endpoint}/${key}`
+  return fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+  .then(checkStatus)
+  .then(res => res.json())
+  .catch((err) => {
+    if (err.response.status === 404) {
+      return Promise.resolve({});
+    }
+    return err;
+  });
+}
+
 module.exports = {
   createMossByte,
+  editMossByte,
   endpoint,
   getMossByte,
   removeMossByte,

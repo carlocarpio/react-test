@@ -6,8 +6,18 @@ form {
   margin: 20px 0 60px;
 }
 
+.editBtn {
+  margin-right: 5px;
+}
+
 .btn-form-group {
   justify-content: space-between !important;
+}
+
+.modal-content {
+  background-color: #FFFFFF;
+  height: 500px;
+  padding: 30px;
 }
 
 .task-item {
